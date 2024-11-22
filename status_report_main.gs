@@ -15,10 +15,10 @@ function getVariables1(co_ind) {
   // Save all values on the sheet
   var data = _gas.getRange(_arow, 1, 1, 23).getValues();
   // Save contract and type
-  if (data[0][1] != "") {
-    var contract = (data[0][0] + " " + data[0][1]).trim();
-  } else {
+  if (data[0][1] == "" || data[0][1].toLowerCase() == "n/a") {
     var contract = data[0][0].trim();
+  } else {
+    var contract = (data[0][0] + " " + data[0][1]).trim();
   };
   // Year
   if (data[0][10].trim().split("\n").length == 1) {
@@ -177,7 +177,7 @@ function generateDash8Letter() {
   };
   // Create copy of template and save ID
   consoleHeader("Creating Word Doc");
-  var new_file = copyTemplate("", " " + values[0]);
+  var new_file = copyTemplate("", values[0]);
   // Open doc and replace fields with pulled data
   consoleHeader("Inputting Values");
   var doc = DocumentApp.openById(new_file[0]);
@@ -216,7 +216,7 @@ function generateCORDelegation() {
   };
   // Create copy of template and save ID
   consoleHeader("Creating Word Doc");
-  var new_file = copyTemplate("", " " + values[0]);
+  var new_file = copyTemplate("", values[0]);
   // Open doc and replace fields with pulled data
   consoleHeader("Inputting Values");
   var doc = DocumentApp.openById(new_file[0]);
@@ -246,7 +246,7 @@ function generateModMemorandum() {
   };
   // Create copy of template and save ID
   consoleHeader("Creating Word Doc");
-  var new_file = copyTemplate("", " " + values[0]);
+  var new_file = copyTemplate("", values[0]);
   // Open doc and replace fields with pulled data
   consoleHeader("Inputting Values");
   var doc = DocumentApp.openById(new_file[0]);
@@ -465,7 +465,7 @@ function pullUEI() {
   // Send email if contract was found, exit otherwise
   consoleHeader("Send Email");
   if (uei != "") {
-    MailApp.sendEmail({to: "1@email.gov",
+    MailApp.sendEmail({to: "",
                       //cc: "ugh@derp.com",
                       subject: uei
                       //body: ""
@@ -506,10 +506,10 @@ function surveyRequest() {
   signature += "NOAA, AGO<br>";
   signature += "Eastern Acquisition Division</font>";
   // Create draft
-  GmailApp.createDraft("1@email.gov",
+  GmailApp.createDraft("vanassa.m.barner@noaa.gov",
                        "Survey Request for " + values[0] + " P25XXX",
                        "",
-                       {cc: "",
+                       {cc: "heather.l.coleman@noaa.gov",
                         htmlBody: body + signature
   });
   Browser.msgBox('Email drafted - check your "Drafts" folder in Gmail. Please update the modification number and purpose before sending...');
@@ -971,7 +971,7 @@ function pullUEIOld() {
   // Send email if contract was found, exit otherwise
   consoleHeader("Send Email");
   if (uei != "") {
-    MailApp.sendEmail({to: "vendorreport@feddatacheck.net",
+    MailApp.sendEmail({to: "",
                       //cc: "ugh@derp.com",
                       subject: uei,
                       //body: ""
@@ -1111,7 +1111,7 @@ function parsePOPCOR(opop) {
 
 
 function redirectFolder() {
-  var url = "https://drive.google.com/drive/folders/XXXXXXXXXX";
+  var url = "https://drive.google.com/drive/folders/";
   var html = "<script>window.open('" + url + "');google.script.host.close();</script>";
   var userInterface = HtmlService.createHtmlOutput(html);
   SpreadsheetApp.getUi().showModalDialog(userInterface, 'Redirecting...');
@@ -1165,7 +1165,7 @@ function surveyRequestOld() {
   signature = signature + "NOAA, AGO\n";
   signature = signature + "Eastern Acquisition Division\n";
   // Create draft
-  GmailApp.createDraft("vanassa.m.barner@noaa.gov",
+  GmailApp.createDraft("",
                        "Survey Request for " + values[1] + " " + mod_desc[0],
                        embody + signature
   );

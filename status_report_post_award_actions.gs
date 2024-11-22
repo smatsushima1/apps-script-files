@@ -45,22 +45,46 @@ Column number: heading
 function mainCheck(row) {
   getVariables2();
   var data = _gas.getRange("L" + row + ":U" + row).getValues();
+  var days_ms = 1000*60*60*24;
+  var tdate_ms = _today.getTime();
   // Exit if no 120-day notice column and follow-on column are empty
   if (data[0][0] == "" && data[0][8] == "") {
     return;
   // Mark row as complete if option has been exercised and no follow-on required; check if new option is required
   } else if (data[0][7] != "" && data[0][8] == "") {
-    updateColorStatus(row, "white", "");
-    createDate(row);
-    return;
+    if (tdate_ms >= new Date(data[0][6]).getTime()) {
+      updateColorStatus(row, "white", "");
+      createDate(row);   
+      return;
+    } else {
+      updateColorStatus(row, "white", "");
+      return;
+    };
   // If follow-on has been awarded, order or contract is ready for closout
-  } else if (data[0][9] != "") {
-    updateColorStatus(row, "blue", "");
+  } else if (data[0][9] != "" && tdate_ms >= new Date(data[0][8]).getTime()) {
+    var con_ord = _gas.getRange(row, 1, 1, 2).getValues();
+    // First check if the action is a contract
+    if (con_ord[0][1] == "" || con_ord[0][1].trim().toLowerCase() == "n/a") {
+      var contracts = _gas.getRange("A" + _frow + ":A" + _lrow).getValues();
+      // If there are orders still present, then don't highlight blue, otherwise, highlight blue
+      if (contracts.filter(x => x==con_ord[0][0]).length > 1) {
+        updateColorStatus(row, "white", "");
+        return;
+      } else {
+        updateColorStatus(row, "blue", "");
+        return;
+      };
+    // All orders
+    } else {
+      updateColorStatus(row, "blue", "");
+      return;
+    };
+  // If follow-on has been awarded, but order is still not ready for closeout
+  } else if (data[0][9] != "" && tdate_ms < new Date(data[0][8]).getTime()) {
+    updateColorStatus(row, "white", "");
     return;
   };
   // Check for all other dates
-  var days_ms = 1000*60*60*24;
-  var tdate_ms = _today.getTime();
   var day_120_diff = Math.round((new Date(data[0][0]).getTime() - tdate_ms) / days_ms) + 1;
   var day_60_diff = Math.round((new Date(data[0][3]).getTime() - tdate_ms) / days_ms) + 1;
   var day_ex_diff = Math.round((new Date(data[0][6]).getTime() - tdate_ms) / days_ms) + 1;
@@ -142,10 +166,6 @@ function updateColorStatus(row, color, status_message) {
   _gas.getRange(row, 4).setValue(status_message);
 };
 
-
-function dev104() {
-  if (Date.getDay() == 3) console.log(1);
-};
 
 function updateDaily() {
   var st = Date.now();
@@ -280,7 +300,7 @@ function generateEmail(list) {
   signature += "NOAA, AGO<br>";
   signature += "Eastern Acquisition Division</font>";
   // Draft Email
-  GmailApp.createDraft("1@email.gov, 2@email.gov, 3@email.gov",
+  GmailApp.createDraft("",
                        "Status Report Upcoming Actions - " + Utilities.formatDate(new Date(), "EST", "M/dd"),
                        "",
                        {cc: "",
@@ -366,19 +386,15 @@ function addDatesCalendar() {
 // Get font color
 function dev101() {
   getVariables2();
+  // Font color
   console.log(_gas.getActiveCell().getTextStyle().getForegroundColor());
-};
-
-
-// Get background color
-function dev102() {
-  getVariables2();
+  // Background color
   console.log(_gas.getActiveCell().getBackgroundColor());
 };
 
 
 // Dev report run
-function dev103() {
+function dev102() {
   getVariables2();
   var data_list = [ [ 'Other Person 1',
     'EA133C17BA0049',
@@ -1128,6 +1144,61 @@ function addNoticeDates() {
     list_120_60[i][8] = list_days[i][3];
   };
   _gas.getRange(_frow, 13, list_120_60.length, list_120_60[0].length).setValues(list_120_60);
+};
+
+
+function mainCheckOld(row) {
+  getVariables2();
+  var data = _gas.getRange("L" + row + ":U" + row).getValues();
+  var days_ms = 1000*60*60*24;
+  var tdate_ms = _today.getTime();
+  // Exit if no 120-day notice column and follow-on column are empty
+  if (data[0][0] == "" && data[0][8] == "") {
+    return;
+  // Mark row as complete if option has been exercised and no follow-on required; check if new option is required
+  } else if (data[0][7] != "" && data[0][8] == "") {
+    if (tdate_ms >= new Date(data[0][6]).getTime()) {
+      updateColorStatus(row, "white", "");
+      createDate(row);   
+      return;
+    } else {
+      updateColorStatus(row, "white", "");
+      return;
+    };
+  // If follow-on has been awarded, order or contract is ready for closout
+  } else if (data[0][9] != "" && tdate_ms >= new Date(data[0][8]).getTime()) {
+    updateColorStatus(row, "blue", "");
+    return;
+  // If follow-on has been awarded, but order is still not ready for closeout
+  } else if (data[0][9] != "" && tdate_ms < new Date(data[0][8]).getTime()) {
+    updateColorStatus(row, "white", "");
+    return;
+  };
+  // Check for all other dates
+  var day_120_diff = Math.round((new Date(data[0][0]).getTime() - tdate_ms) / days_ms) + 1;
+  var day_60_diff = Math.round((new Date(data[0][3]).getTime() - tdate_ms) / days_ms) + 1;
+  var day_ex_diff = Math.round((new Date(data[0][6]).getTime() - tdate_ms) / days_ms) + 1;
+  if (data[0][8] == "") {
+    var day_fo_diff = 999;
+  } else {
+    var day_fo_diff = Math.round((new Date(data[0][8]).getTime() - tdate_ms) / days_ms) + 1;
+  };
+  // 120 day notice to client
+  if (data[0][1] == "") {
+    checkDays(row, day_120_diff, "120-day notice to client");
+  // 60 day notice to contractor
+  } else if (data[0][4] == "") {
+    checkDays(row, day_60_diff, "60-day notice to contractor");
+  // Exercise option notice
+  } else if (data[0][7] == "") {
+    checkDays(row, day_ex_diff, "Exercise option");
+  // Follow-on notice
+  } else if (data[0][8] != "" && data[0][9] == "") {
+    checkDays(row, day_fo_diff, "Follow-on");
+  // All other actions
+  } else {
+    checkDays(row, 999, "");
+  };
 };
 */
 
