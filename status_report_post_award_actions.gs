@@ -153,15 +153,33 @@ function updateColorStatus(row, color, status_message) {
     hl = "#d9d2e9";
   };
   _gas.getRange(row, 1, 1, _lcol).setBackground(hl);
-  // Keep cells yellow to indicate input
-  if (_gas.getRange(row, 12).getValue() != "") {
-    _gas.getRange(row, 13).setBackground("#ffff00");
-    _gas.getRange(row, 16).setBackground("#ffff00");
-    _gas.getRange(row, 19).setBackground("#ffff00");
+  // Highlight applicable cells
+  var row_vals = _gas.getRange("A" + row + ":U" + row).getValues();
+  // 13, 16, 18, 20
+  if (row_vals[0][11] != "") {
+    if (row_vals[0][12] == "") {
+      _gas.getRange(row, 13).setBackground("#ffff00");
+    } else {
+      _gas.getRange(row, 13).setBackground(hl);
+    };
+    if (row_vals[0][15] == "") {
+      _gas.getRange(row, 16).setBackground("#ffff00");
+    } else {
+      _gas.getRange(row, 16).setBackground(hl);
+    };
+    if (row_vals[0][18] == "") {
+      _gas.getRange(row, 19).setBackground("#ffff00");
+    } else {
+      _gas.getRange(row, 19).setBackground(hl);
+    };
   };
   // Follow-on dates go on all rows, if applicable
-  if (_gas.getRange(row, 20).getValue() != "") {
-    _gas.getRange(row, 21).setBackground("#ffff00");
+  if (row_vals[0][19] != "") {
+    if (row_vals[0][20] == "") {
+      _gas.getRange(row, 21).setBackground("#ffff00");
+    } else {
+      _gas.getRange(row, 21).setBackground(hl);
+    };
   };  
   _gas.getRange(row, 4).setValue(status_message);
 };
@@ -300,10 +318,10 @@ function generateEmail(list) {
   signature += "NOAA, AGO<br>";
   signature += "Eastern Acquisition Division</font>";
   // Draft Email
-  GmailApp.createDraft("",
+  GmailApp.createDraft("heather.l.coleman@noaa.gov, dorothy.curling@noaa.gov, nicole.lawson@noaa.gov",
                        "Status Report Upcoming Actions - " + Utilities.formatDate(new Date(), "EST", "M/dd"),
                        "",
-                       {cc: "",
+                       {cc: "stacy.dohse@noaa.gov",
                         htmlBody: body + signature
   });
 };
@@ -521,7 +539,7 @@ function createDate() {
   var dates = findPOP(data[0][0]);
   // First add follow-on date if it's just a regular POP with no options
   if (data[0][0].trim().split("\n").length == 1) {
-    data[i][9] = data[i][0].trim().split("\n")[0].replace("Base:", "").trim().replace(/\s/g, "").split("-")[1];
+    data[0][9] = data[0][0].trim().split("\n")[0].replace("Base:", "").trim().replace(/\s/g, "").split("-")[1];
   // For all else, check options
   } else if (_today.getTime() < new Date(dates[1]).getTime()) {
     var st = new Date(dates[1]).getTime();
@@ -540,9 +558,8 @@ function createDate() {
     if (dates[3] == 1) {
       data[0][9] = dates[2];
     };
-    console.log(data);
-    _gas.getRange(row, 11, 1, data[0].length).setValues(data);
   };
+  _gas.getRange(row, 11, 1, data[0].length).setValues(data);
 };
 
 
@@ -1199,6 +1216,36 @@ function mainCheckOld(row) {
   } else {
     checkDays(row, 999, "");
   };
+};
+
+
+function updateColorStatusOld(row, color, status_message) {
+  var hl = "#ffffff";
+  if (color == "blue") {
+    hl = "#c9daf8";
+  } else if (color == "gray") {
+    hl = "#d9d9d9";
+  } else if (color == "yellow") {
+    hl = "#fff2cc";
+  } else if (color == "orange") {
+    hl = "#fce5cd";
+  } else if (color == "red") {
+    hl = "#f4cccc";
+  } else if (color == "purple") {
+    hl = "#d9d2e9";
+  };
+  _gas.getRange(row, 1, 1, _lcol).setBackground(hl);
+  // Highlight applicable cells
+  if (_gas.getRange(row, 12).getValue() != "") {
+    _gas.getRange(row, 13).setBackground("#ffff00");
+    _gas.getRange(row, 16).setBackground("#ffff00");
+    _gas.getRange(row, 19).setBackground("#ffff00");
+  };
+  // Follow-on dates go on all rows, if applicable
+  if (_gas.getRange(row, 20).getValue() != "") {
+    _gas.getRange(row, 21).setBackground("#ffff00");
+  };  
+  _gas.getRange(row, 4).setValue(status_message);
 };
 */
 
